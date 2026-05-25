@@ -34,7 +34,7 @@ stats_desc <- df_first %>%
 
 print(stats_desc)
 
-# 4. ANALYSE GRAPHIQUE (Time Series & Scatter Plots)
+## 4. ANALYSE GRAPHIQUE (Time Series & Scatter Plots)
 # --- Séries Temporelles (Double Axe) ---
 plot_double_axis <- function(time, left, right, left_lab, right_lab, main) {
   par(mar = c(5, 4, 4, 5) + 0.1) # Augmenter la marge droite
