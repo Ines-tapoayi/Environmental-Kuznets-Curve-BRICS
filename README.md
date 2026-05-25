@@ -1,4 +1,4 @@
-# Environmental-Kuznets-Curve-BRICS
+# Environmental-Kuznets-Curve-BRIC
 ## Overview
 This project investigates the relationship between economic growth and environmental degradation in BRIC countries:
 
