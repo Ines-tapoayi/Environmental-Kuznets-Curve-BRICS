@@ -1,8 +1,4 @@
-setwd("/Users/ness/Documents/Master IEF/Macro Economie/EKC")
-
-# ==============================================================================
-# 1. CHARGEMENT DES LIBRAIRIES
-# ==============================================================================
+## 1. CHARGEMENT DES LIBRAIRIES
 library(readxl)
 library(dplyr)
 library(ggplot2)
@@ -12,18 +8,14 @@ library(stargazer)
 library(ggplot2)
 library(gridExtra)
 
-# ==============================================================================
-# 2. IMPORTATION ET NETTOYAGE DES DONNEES
-# ==============================================================================
-
-# A. Importation des données format large (pour stats descriptives et Time Series)
+## 2. IMPORTATION ET NETTOYAGE DES DONNEES
 df_first <- read_excel("data first part.xlsx", sheet = "Data")
 df_first <- na.omit(df_first) # Suppression des valeurs manquantes
 
-# B. Importation des données format panel (pour le modèle EKC)
+# Importation des donnÃ©es format panel (pour le modÃ¨le EKC)
 df_ekc <- read_excel("ekc_data.xlsx", sheet = "data")
 
-# Création des variables logarithmiques pour le modèle
+# CrÃ©ation des variables logarithmiques pour le modÃ¨le
 df_ekc <- df_ekc %>%
   mutate(
     ln_gdp = log(gdp),
@@ -31,9 +23,7 @@ df_ekc <- df_ekc %>%
     ln_gdp_sq = log(gdp)^2
   )
 
-# ==============================================================================
-# 3. STATISTIQUES DESCRIPTIVES
-# ==============================================================================
+## 3. STATISTIQUES DESCRIPTIVES
 cat("\n--- STATISTIQUES DESCRIPTIVES (Moyenne & Ecart-Type) ---\n")
 
 # Calcul des moyennes et Ecarts-types pour chaque colonne (sauf Time)
@@ -44,16 +34,12 @@ stats_desc <- df_first %>%
 
 print(stats_desc)
 
-# ==============================================================================
 # 4. ANALYSE GRAPHIQUE (Time Series & Scatter Plots)
-# ==============================================================================
-
-# --- A. Séries Temporelles (Double Axe) ---
-# Fonction pour tracer deux axes
+# --- SÃ©ries Temporelles (Double Axe) ---
 plot_double_axis <- function(time, left, right, left_lab, right_lab, main) {
   par(mar = c(5, 4, 4, 5) + 0.1) # Augmenter la marge droite
   plot(time, left, type = "l", col = "blue", lwd = 2,
-       xlab = "Année", ylab = left_lab, main = main)
+       xlab = "AnnÃ©e", ylab = left_lab, main = main)
   par(new = TRUE)
   plot(time, right, type = "l", col = "red", lwd = 2, lty = 2,
        axes = FALSE, xlab = "", ylab = "")
@@ -65,29 +51,29 @@ plot_double_axis <- function(time, left, right, left_lab, right_lab, main) {
 
 # Affichage des graphiques pour les 4 pays
 par(mfrow = c(2, 2)) # Grille 2x2
-plot_double_axis(df_first$Time, df_first$gdp_bra, df_first$ggem_bra, "PIB", "GES", "Brésil")
+plot_double_axis(df_first$Time, df_first$gdp_bra, df_first$ggem_bra, "PIB", "GES", "BrÃ©sil")
 plot_double_axis(df_first$Time, df_first$gdp_rus, df_first$ggem_rus, "PIB", "GES", "Russie")
 plot_double_axis(df_first$Time, df_first$gdp_ind, df_first$ggem_ind, "PIB", "GES", "Inde")
 plot_double_axis(df_first$Time, df_first$gdp_chi, df_first$ggem_chi, "PIB", "GES", "Chine")
 par(mfrow = c(1, 1)) # Reset grille
 
-# --- B. Scatter Plots (Relation brute PIB vs GES) ---
+# --- Scatter Plots (Relation brute PIB vs GES) ---
 par(mfrow = c(2, 2))
-plot(df_first$gdp_bra, df_first$ggem_bra, main="Brésil: PIB vs GES", xlab="PIB", ylab="GES", pch=19, col="darkgreen")
+plot(df_first$gdp_bra, df_first$ggem_bra, main="BrÃ©sil: PIB vs GES", xlab="PIB", ylab="GES", pch=19, col="darkgreen")
 plot(df_first$gdp_chi, df_first$ggem_chi, main="Chine: PIB vs GES", xlab="PIB", ylab="GES", pch=19, col="red")
 plot(df_first$gdp_rus, df_first$ggem_rus, main="Russie: PIB vs GES", xlab="PIB", ylab="GES", pch=19, col="blue")
 plot(df_first$gdp_ind, df_first$ggem_ind, main="Inde: PIB vs GES", xlab="PIB", ylab="GES", pch=19, col="orange")
 par(mfrow = c(1, 1))
 
 
-# 4. Création du Graphique 2 : Relation ln(GGEM) vs ln(GDP)Â²
+# CrÃ©ation du Graphique 2 : Relation ln(GGEM) vs ln(GDP)Ã‚Â²
 ggplot(df_ekc, aes(x = ln_gdp, y = ln_ggem)) +
   geom_point(aes(color = country), alpha = 0.7, size = 2) +
   geom_smooth(method = "loess", color = "black", size = 0.8, se = FALSE) +
   facet_wrap(~ country, scales = "free") + # Division par pays
   theme_bw() +
   labs(title = "Trajectoire des Emissions par Pays",
-       subtitle = "Relation Log-Log avec tendance linéaire ajustée",
+       subtitle = "Relation Log-Log avec tendance linÃ©aire ajustÃ©e",
        x = "Log(PIB par habitant)",
        y = "Log(Emissions GES)",
        color = "Pays") +
@@ -96,29 +82,23 @@ ggplot(df_ekc, aes(x = ln_gdp, y = ln_ggem)) +
         legend.position = "none")
 
 
-# ==============================================================================
-# 5. MODELISATION ECONOMETRIQUE (EKC)
-# ==============================================================================
-
-# Estimation du modèle Within (Effets fixes Pays + Année)
+## 5. MODELISATION ECONOMETRIQUE (EKC)
+# Estimation du modÃ¨le Within (Effets fixes Pays + AnnÃ©e)
 ekc_twoways <- plm(ln_ggem ~ ln_gdp + I(ln_gdp^2), 
                    data = df_ekc, 
                    index = c("country", "time"), 
                    model = "within", 
                    effect = "twoways")
 
-# Affichage des résultats
 summary(ekc_twoways)
 
-# ==============================================================================
-# 6. CALCUL DU POINT DE RETOURNEMENT (TURNING POINT)
-# ==============================================================================
 
-# Récupération des coefficients
-beta1 <- coef(ekc_twoways)["ln_gdp"]       # Coefficient terme linéaire
-beta2 <- coef(ekc_twoways)["I(ln_gdp^2)"]  # Coefficient terme carré
+## 6. CALCUL DU POINT DE RETOURNEMENT (TURNING POINT)
+# RÃ©cupÃ©ration des coefficients
+beta1 <- coef(ekc_twoways)["ln_gdp"]       # Coefficient terme linÃ©aire
+beta2 <- coef(ekc_twoways)["I(ln_gdp^2)"]  # Coefficient terme carrÃ©
 
-# Vérification de la forme en U inversé (beta2 doit etre négatif)
+# VÃ©rification de la forme en U inversÃ© (beta2 doit etre nÃ©gatif)
 is_inverted_U <- beta2 < 0
 
 # Calcul du point de retournement (en log puis en niveau)
@@ -128,23 +108,21 @@ turning_point_usd <- exp(turning_point_log)
 
 cat("\n--- ANALYSE DU POINT DE RETOURNEMENT ---\n")
 cat("Coefficient Beta 2 (Quadratique) :", beta2, "\n")
-cat("Forme en U inversé validée ? :", is_inverted_U, "\n")
+cat("Forme en U inversÃ© validÃ©e ? :", is_inverted_U, "\n")
 cat("Point de retournement (Log PIB) :", turning_point_log, "\n")
 cat("Point de retournement (PIB $)   :", round(turning_point_usd, 2), "$\n")
 
-# ==============================================================================
-# 7. VISUALISATION FINALE : COURBE EKC THEORIQUE vs REALITE
-# ==============================================================================
 
-# Création d'une séquence de PIB fictive pour tracer la courbe lisse
+## 7. VISUALISATION FINALE : COURBE EKC THEORIQUE vs REALITE
+# CrÃ©ation d'une sÃ©quence de PIB fictive pour tracer la courbe lisse
 gdp_seq <- seq(from = min(df_ekc$gdp), to = max(df_ekc$gdp), length.out = 300)
 ln_gdp_seq <- log(gdp_seq)
 
-# Prédiction théorique (centrÃ©e sur la moyenne des données pour l'ajustement visuel)
+# PrÃ©diction thÃ©orique (centrÃƒÂ©e sur la moyenne des donnÃ©es pour l'ajustement visuel)
 # Note : C'est une visualisation des effets marginaux
 y_pred_theoretical <- beta1 * ln_gdp_seq + beta2 * ln_gdp_seq^2
 
-# Ajustement constant pour aligner la courbe théorique sur le nuage de points
+# Ajustement constant pour aligner la courbe thÃ©orique sur le nuage de points
 mean_y_actual <- mean(df_ekc$ln_ggem)
 mean_y_pred   <- mean(beta1 * df_ekc$ln_gdp + beta2 * df_ekc$ln_gdp^2)
 constant_adj  <- mean_y_actual - mean_y_pred
@@ -154,12 +132,12 @@ plot_data <- data.frame(
   ln_ggem_pred = y_pred_theoretical + constant_adj
 )
 
-# Graphique final avec ggplot2
+# Graphique final
 p <- ggplot() +
-  # Points réels
+  # Points rÃ©els
   geom_point(data = df_ekc, aes(x = gdp, y = ln_ggem, color = country), alpha = 0.6, size = 2) +
   
-  # Courbe de régression EKC
+  # Courbe de rÃ©gression EKC
   geom_line(data = plot_data, aes(x = gdp, y = ln_ggem_pred), color = "black", size = 1.2) +
   
   # Ligne verticale du point de retournement
@@ -182,10 +160,8 @@ p <- ggplot() +
 print(p)
 
 
-# ==============================================================================
-# 1. INSTALLATION ET CHARGEMENT DES PACKAGES
-# ==============================================================================
-# Si vous n'avez pas le package, décommentez la ligne ci-dessous :
+########
+
 
 install.packages("neuralnet")
 
@@ -194,19 +170,18 @@ library(dplyr)
 library(neuralnet)
 library(ggplot2)
 
-# ==============================================================================
-# 2. PREPARATION DES DONNEES
-# ==============================================================================
+
+## 8. PREPARATION DES DONNEES
 df_ekc <- read_excel("ekc_data.xlsx", sheet = "data")
 
-# Les réseaux de neurones sont très sensibles A l'échelle des données.
-# Il FAUT normaliser les données (Min-Max Scaling) pour qu'elles soient entre 0 et 1.
+# Les rÃ©seaux de neurones sont trÃ¨s sensibles A l'Ã©chelle des donnÃ©es.
+# Il FAUT normaliser les donnÃ©es (Min-Max Scaling) pour qu'elles soient entre 0 et 1.
 
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
 
-# Création d'un dataframe normalisé pour l'entrainement
+# CrÃ©ation d'un dataframe normalisÃ© pour l'entrainement
 data_nn <- df_ekc %>%
   select(gdp, ggem) %>%
   mutate(
@@ -214,22 +189,21 @@ data_nn <- df_ekc %>%
     ggem_norm = normalize(ggem)
   )
 
-# On garde les valeurs Min/Max pour "dénormaliser" (remettre en $) plus tard
+# On garde les valeurs Min/Max pour "dÃ©normaliser" (remettre en $) plus tard
 min_gdp <- min(df_ekc$gdp)
 max_gdp <- max(df_ekc$gdp)
 min_ggem <- min(df_ekc$ggem)
 max_ggem <- max(df_ekc$ggem)
 
-# ==============================================================================
-# 3. ENTRAÃŽNEMENT DU RESEAU DE NEURONES
-# ==============================================================================
-set.seed(123) # Pour avoir des résultats reproductibles
 
-# Configuration du réseau :
-# - Entrée : PIB (normalisé)
-# - Sortie : GES (normalisé)
-# - hidden = c(3, 2) : Deux couches cachées (une de 3 neurones, une de 2)
-# - linear.output = TRUE : Car on fait de la rÃ©gression (prédire un chiffre), pas de la classification.
+## 9. ENTRAINEMENT DU RESEAU DE NEURONES
+set.seed(123) # Pour avoir des rÃ©sultats reproductibles
+
+# Configuration du rÃ©seau :
+# - EntrÃ©e : PIB (normalisÃ©)
+# - Sortie : GES (normalisÃ©)
+# - hidden = c(3, 2) : Deux couches cachÃ©es (une de 3 neurones, une de 2)
+# - linear.output = TRUE : Car on fait de la rÃƒÂ©gression (prÃ©dire un chiffre), pas de la classification.
 
 nn_model <- neuralnet(ggem_norm ~ gdp_norm, 
                       data = data_nn, 
@@ -237,50 +211,42 @@ nn_model <- neuralnet(ggem_norm ~ gdp_norm,
                       linear.output = TRUE,
                       stepmax = 1e6)
 
-# Affichage du graphique du réseau (Architecture)
+# Affichage du graphique du rÃ©seau (Architecture)
 plot(nn_model, rep = "best")
 
-# ==============================================================================
-# 4. PREDICTION ET DENORMALISATION
-# ==============================================================================
 
-# On génère une séquence de PIB (de min à max) pour voir la courbe apprise par le réseau
+## 10. PREDICTION ET DENORMALISATION
+# On gÃ©nÃ¨re une sÃ©quence de PIB (de min Ã  max) pour voir la courbe apprise par le rÃ©seau
 test_gdp_seq <- seq(min(df_ekc$gdp), max(df_ekc$gdp), length.out = 100)
 test_gdp_norm <- (test_gdp_seq - min_gdp) / (max_gdp - min_gdp) # Normalisation
 
-# Prédiction par le réseau de neurones
+# PrÃ©diction par le rÃ©seau de neurones
 pred_nn_norm <- compute(nn_model, data.frame(gdp_norm = test_gdp_norm))$net.result
 
-# Dénormalisation des prédictions (revenir à l'échelle réelle)
+# DÃ©normalisation des prÃ©dictions (revenir Ã  l'Ã©chelle rÃ©elle)
 pred_nn_real <- pred_nn_norm * (max_ggem - min_ggem) + min_ggem
 
-# Création dataframe pour le graphique
+# CrÃ©ation dataframe pour le graphique
 df_pred <- data.frame(gdp = test_gdp_seq, ggem_pred = pred_nn_real)
 
-# ==============================================================================
-# 5. VISUALISATION : RESULTATS DU RESEAU DE NEURONES
-# ==============================================================================
 
+## 11. VISUALISATION : RESULTATS DU RESEAU DE NEURONES
 ggplot() +
-  # Points réels (Données brutes)
+  # Points rÃ©els (DonnÃ©es brutes)
   geom_point(data = df_ekc, aes(x = gdp, y = ggem), color = "grey50", alpha = 0.6) +
   
-  # Courbe apprise par le Réseau de Neurones (Rouge)
+  # Courbe apprise par le RÃ©seau de Neurones (Rouge)
   geom_line(data = df_pred, aes(x = gdp, y = ggem_pred), color = "red", size = 1.5) +
   
-  labs(title = "Approximation EKC par Réseau de Neurones",
-       subtitle = "Le réseau apprend la relation non-linéaire sans formule pré-définie",
+  labs(title = "Approximation EKC par RÃ©seau de Neurones",
+       subtitle = "Le rÃ©seau apprend la relation non-linÃ©aire sans formule prÃ©-dÃ©finie",
        x = "PIB par habitant ($)",
        y = "Emissions de GES (Tonnes/hab)") +
   theme_minimal()
 
 
+########
 
-
-# ==============================================================================
-# 1. INSTALLATION ET CHARGEMENT DES PACKAGES
-# ==============================================================================
-# Si le package n'est pas installée, décommentez la ligne ci-dessous :
 
 install.packages("neuralnet")
 
@@ -289,11 +255,10 @@ library(dplyr)
 library(neuralnet)
 library(ggplot2)
 
-# ==============================================================================
-# 2. PREPARATION DES DONNEES (NORMALISATION)
-# ==============================================================================
-# Les réseaux de neurones ne fonctionnent pas bien avec des chiffres énormes (PIB > 10000).
-# Il est IMPERATIF de normaliser les données entre 0 et 1 (Min-Max Scaling).
+
+## 12. PREPARATION DES DONNEES (NORMALISATION)
+# Les rÃ©seaux de neurones ne fonctionnent pas bien avec des chiffres Ã©normes (PIB > 10000).
+# Il est IMPERATIF de normaliser les donnÃ©es entre 0 et 1 (Min-Max Scaling).
 
 df_ekc <- read_excel("ekc_data.xlsx", sheet = "data")
 
@@ -302,13 +267,13 @@ normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
 
-# On garde les valeurs Min/Max pour "dénormaliser" (remettre en $) à la fin
+# On garde les valeurs Min/Max pour "dÃ©normaliser" (remettre en $) Ã  la fin
 min_gdp <- min(df_ekc$gdp)
 max_gdp <- max(df_ekc$gdp)
 min_ggem <- min(df_ekc$ggem)
 max_ggem <- max(df_ekc$ggem)
 
-# Création du dataset d'entrainement normalisé
+# CrÃ©ation du dataset d'entrainement normalisÃ©
 df_nn <- df_ekc %>%
   select(gdp, ggem) %>%
   mutate(
@@ -316,98 +281,93 @@ df_nn <- df_ekc %>%
     ggem_norm = normalize(ggem)
   )
 
-# ==============================================================================
-# 3. ENTRAINEMENT DU RESEAU DE NEURONES
-# ==============================================================================
-set.seed(123) # Fixer l'aléatoire pour avoir toujours le meme résultat
 
-# Création du modèle
-# hidden = c(3, 2) : 2 couches cachées (une de 3 neurones, une de 2)
-# linear.output = TRUE : Car on veut prédire un chiffre (régression), pas une classe.
+## 13. ENTRAINEMENT DU RESEAU DE NEURONES
+set.seed(123) # Fixer l'alÃ©atoire pour avoir toujours le meme rÃ©sultat
+
+# CrÃ©ation du modÃ¨le
+# hidden = c(3, 2) : 2 couches cachÃ©es (une de 3 neurones, une de 2)
+# linear.output = TRUE : Car on veut prÃ©dire un chiffre (rÃ©gression), pas une classe.
 nn_model <- neuralnet(ggem_norm ~ gdp_norm, 
                       data = df_nn, 
                       hidden = c(3, 2), 
                       linear.output = TRUE,
-                      stepmax = 1e6) # Augmente le nb d'étapes max pour assurer la convergence
+                      stepmax = 1e6) # Augmente le nb d'Ã©tapes max pour assurer la convergence
 
-# Affichage de l'architecture du réseau (Input -> Hidden Layers -> Output)
-plot(nn_model, rep = "best", main = "Architecture du RÃ©seau de Neurones")
+# Affichage de l'architecture du rÃ©seau (Input -> Hidden Layers -> Output)
+plot(nn_model, rep = "best", main = "Architecture du RÃƒÂ©seau de Neurones")
 
-# ==============================================================================
-# 4. GENERATION DE LA COURBE PREDITE
-# ==============================================================================
-# On crée une séquence de PIB fictive (de 0 à 1) pour tracer la ligne rouge lisse
+
+## 14. GENERATION DE LA COURBE PREDITE
+# On crÃ©e une sÃ©quence de PIB fictive (de 0 Ã  1) pour tracer la ligne rouge lisse
 gdp_seq_norm <- seq(0, 1, length.out = 200)
 test_data <- data.frame(gdp_norm = gdp_seq_norm)
 
-# Prédiction par le réseau
+# PrÃ©diction par le rÃ©seau
 nn_pred <- compute(nn_model, test_data)
 
-# Dénormalisation des résultats (Retour aux vraies valeurs $ et Tonnes)
+# DÃ©normalisation des rÃ©sultats (Retour aux vraies valeurs $ et Tonnes)
 # Formule : Valeur_Norm * (Max - Min) + Min
 gdp_seq_real <- gdp_seq_norm * (max_gdp - min_gdp) + min_gdp
 ggem_pred_real <- nn_pred$net.result * (max_ggem - min_ggem) + min_ggem
 
-# Création du dataframe final pour le graphique
+# CrÃ©ation du dataframe final pour le graphique
 df_prediction <- data.frame(
   gdp = gdp_seq_real,
   ggem_pred = ggem_pred_real
 )
 
-# ==============================================================================
-# 5. GRAPHIQUE FINAL : NEURAL NETWORK vs REALITE
-# ==============================================================================
 
+## 15. GRAPHIQUE FINAL : NEURAL NETWORK vs REALITE
 ggplot() +
-  # A. Les points réels (Nuage de points gris)
+  # A. Les points rÃ©els (Nuage de points gris)
   geom_point(data = df_ekc, aes(x = gdp, y = ggem), color = "grey50", alpha = 0.5, size = 2) +
   
-  # B. La courbe apprise par le Réseau de Neurones (Ligne Rouge)
+  # B. La courbe apprise par le RÃ©seau de Neurones (Ligne Rouge)
   geom_line(data = df_prediction, aes(x = gdp, y = ggem_pred), color = "red", size = 1.5) +
   
   # C. Mise en forme
-  labs(title = "Approximation EKC par Réseau de Neurones (Neural Net)",
-       subtitle = "Le modèle apprend la non-linéarité sans formule mathématique imposée",
+  labs(title = "Approximation EKC par RÃ©seau de Neurones (Neural Net)",
+       subtitle = "Le modÃ¨le apprend la non-linÃ©aritÃ© sans formule mathÃ©matique imposÃ©e",
        x = "PIB par Habitant ($)",
        y = "Emissions de GES (Tonnes/hab)") +
   theme_minimal() +
   theme(plot.title = element_text(face="bold"))
 
 
-
-# 1. Récupération des données et du modèle
+# RÃ©cupÃ©ration des donnÃ©es et du modÃ¨le
 df <- read_excel("ekc_data.xlsx", sheet = "data")
 df$ln_ggem <- log(df$ggem)
 df$ln_gdp  <- log(df$gdp)
 
-# Estimation du modèle (si pas déjà fait)
+# Estimation du modÃ¨le (si pas dÃ©jÃ  fait)
 ekc_model <- plm(ln_ggem ~ ln_gdp + I(ln_gdp^2), 
                  data = df, 
                  index = c("country", "time"), 
                  model = "within", 
                  effect = "twoways")
 
-# 2. Extraction des coefficients
+# Extraction des coefficients
 b1 <- coef(ekc_model)["ln_gdp"]       # Devrait etre ~ 1.11
 b2 <- coef(ekc_model)["I(ln_gdp^2)"]  # Devrait etre ~ -0.049
 
-# 3. Calcul de l'élasticité pour chaque observation
+# Calcul de l'Ã©lasticitÃ© pour chaque observation
 # Formule : E = b1 + 2 * b2 * ln(GDP)
 df$elasticity <- b1 + 2 * b2 * df$ln_gdp
 
 
-# 4. Graphique : Evolution de l'élasticité dans le temps
+# Graphique : Evolution de l'Ã©lasticitÃ© dans le temps
 ggplot(df, aes(x = time, y = elasticity, color = country)) +
   geom_line(size = 1.2) +
-  # Zone de Découplage Relatif (entre 0 et 1)
+  # Zone de DÃ©couplage Relatif (entre 0 et 1)
   geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0, ymax = 1), fill = "white", 
             alpha = 0.005, color = NA) +
   
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") + # Seuil critique
   geom_hline(yintercept = 0, linetype = "dashed", color = "darkgreen") + # Objectif
   
-  labs(title = "Dynamique du Découplage PIB/GES",
-       subtitle = "Evolution de l'élasticité-revenu des Emissions",
-       y = "Elasticité (Var% Emissions / Var% PIB)",
-       x = "Année") +
+  labs(title = "Dynamique du DÃ©couplage PIB/GES",
+       subtitle = "Evolution de l'Ã©lasticitÃ©-revenu des Emissions",
+       y = "ElasticitÃ© (Var% Emissions / Var% PIB)",
+       x = "AnnÃ©e") +
   theme_minimal()
